@@ -7,10 +7,9 @@ import java.util.stream.Collectors;
 import boardgame.Board;
 import boardgame.Piece;
 import boardgame.Position;
-import chess.pieces.Bishop;
 import chess.pieces.King;
-import chess.pieces.Knight;
 import chess.pieces.Pawn;
+import chess.pieces.Queen;
 import chess.pieces.Rook;
 
 public class ChessMatch {
@@ -86,8 +85,8 @@ public class ChessMatch {
         placeNewPiece('b', 8, new Rook(board, Color.BLACK));
         placeNewPiece('a', 8, new King(board, Color.BLACK));
         placeNewPiece('f', 8, new Pawn(board, Color.BLACK));
-        placeNewPiece('f', 4, new Bishop(board, Color.BLACK));
-        placeNewPiece('f', 5, new Knight(board, Color.BLACK));
+        
+        placeNewPiece('f', 5, new Queen(board, Color.BLACK));
         
 	}
 	
