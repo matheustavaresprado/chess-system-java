@@ -16,6 +16,7 @@ public class ChessMatch {
 	private Color currentPlayer;
 	private Board board;
 	private boolean check;
+	private boolean checkMate;
 	
 	List<Piece> piecesOnTheBoard = new ArrayList<>();
 	List<Piece> capturedPieces = new ArrayList<>();
@@ -25,6 +26,10 @@ public class ChessMatch {
 		turn = 1;
 		currentPlayer = Color.WHITE;
 		initialSetup();
+	}
+	
+	public boolean getCheckMate() {
+		return checkMate;
 	}
 	
 	public boolean getCheck() {
@@ -70,19 +75,12 @@ public class ChessMatch {
 	}
 	
 	private void initialSetup() {
-		placeNewPiece('c', 1, new Rook(board, Color.WHITE));
-        placeNewPiece('c', 2, new Rook(board, Color.WHITE));
-        placeNewPiece('d', 2, new Rook(board, Color.WHITE));
-        placeNewPiece('e', 2, new Rook(board, Color.WHITE));
-        placeNewPiece('e', 1, new Rook(board, Color.WHITE));
-        placeNewPiece('d', 1, new King(board, Color.WHITE));
-
-        placeNewPiece('c', 7, new Rook(board, Color.BLACK));
-        placeNewPiece('c', 8, new Rook(board, Color.BLACK));
-        placeNewPiece('d', 7, new Rook(board, Color.BLACK));
-        placeNewPiece('e', 7, new Rook(board, Color.BLACK));
-        placeNewPiece('e', 8, new Rook(board, Color.BLACK));
-        placeNewPiece('d', 8, new King(board, Color.BLACK));
+		placeNewPiece('h', 7, new Rook(board, Color.WHITE));
+        placeNewPiece('d', 1, new Rook(board, Color.WHITE));
+        placeNewPiece('e', 1, new King(board, Color.WHITE));
+        
+        placeNewPiece('b', 8, new Rook(board, Color.BLACK));
+        placeNewPiece('a', 8, new King(board, Color.BLACK));
 	}
 	
 	public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
@@ -92,6 +90,7 @@ public class ChessMatch {
 		validateTargetPosition(source, target);
 		Piece capturedPiece = makeMove(source, target);
 		System.out.println("");
+		System.out.println("");
 		if(testCheck(currentPlayer)) {
 			undoMove(source, target, capturedPiece);
 			throw new ChessException("Você não pode se colocar em check!");
@@ -99,7 +98,12 @@ public class ChessMatch {
 		
 		check = testCheck(opponent(currentPlayer)) ? true : false;
 		
-		nextTurn();
+		if(testCheckMate(opponent(currentPlayer))) {
+			checkMate = true;
+		}
+		else{
+			nextTurn();
+		}
 		return (ChessPiece)capturedPiece;
 	}
 	
@@ -137,8 +141,7 @@ public class ChessMatch {
 	}
 	
 	private void undoMove(Position source, Position target, Piece capturedPiece) {
-		System.out.println(source.getColumn());
-		Piece p = board.piece(target);
+		Piece p = board.removePiece(target);
 		board.placePiece(p, source);
 		
 		if(capturedPiece != null) {
@@ -172,6 +175,35 @@ public class ChessMatch {
 		
 		return false;
 	}
+	
+	private boolean testCheckMate(Color color) {
+		if(!testCheck(color)) {
+			return false;
+		}
+		
+		List<Piece> pieces = piecesOnTheBoard.stream().filter(x ->((ChessPiece)x).getColor() == color).collect(Collectors.toList());
+		
+		for (Piece piece : pieces) {
+			boolean[][] possibleMoves = piece.possibleMoves();
+			for(int i = 0; i<board.getRows(); i++) {
+				for(int j = 0; j<board.getColumns(); j++) {
+					if(possibleMoves[i][j]) {
+						Position source = ((ChessPiece)piece).getChessPosition().toPosition();
+						Position target = new Position(i, j);
+						Piece capturedPiece = makeMove(source, target);
+						boolean testCheck = testCheck(color);
+						undoMove(source, target, capturedPiece);
+						if(!testCheck) {
+							return false;	
+						}
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
+	
 }
 
 
