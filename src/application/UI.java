@@ -46,7 +46,6 @@ public class UI {
 			int row = Integer.parseInt(s.substring(1));
 			return new ChessPosition(row, column);
 		} catch (RuntimeException e) {
-			e.printStackTrace();
 			throw new InputMismatchException("Erro ao ler posição no tabuleiro. Valores válidos vão de a1 até h8.");
 		}
 	}
