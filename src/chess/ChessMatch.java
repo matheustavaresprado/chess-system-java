@@ -1,5 +1,6 @@
 package chess;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ public class ChessMatch {
 	private boolean check;
 	private boolean checkMate;
 	private ChessPiece enPassantVulnerable;
+	private ChessPiece promoted;
 
 	List<Piece> piecesOnTheBoard = new ArrayList<>();
 	List<Piece> capturedPieces = new ArrayList<>();
@@ -31,6 +33,10 @@ public class ChessMatch {
 		turn = 1;
 		currentPlayer = Color.WHITE;
 		initialSetup();
+	}
+
+	public ChessPiece getPromoted() {
+		return promoted;
 	}
 
 	public ChessPiece getEnPassantVulnerable() {
@@ -99,22 +105,49 @@ public class ChessMatch {
 		placeNewPiece('g', 2, new Pawn(board, Color.WHITE, this));
 		placeNewPiece('h', 2, new Pawn(board, Color.WHITE, this));
 
-		placeNewPiece('a', 8, new Rook(board, Color.BLACK));
-		placeNewPiece('b', 8, new Knight(board, Color.BLACK));
-		placeNewPiece('c', 8, new Bishop(board, Color.BLACK));
-		placeNewPiece('d', 8, new Queen(board, Color.BLACK));
+//		placeNewPiece('a', 8, new Rook(board, Color.BLACK));
+//		placeNewPiece('b', 8, new Knight(board, Color.BLACK));
+//		placeNewPiece('c', 8, new Bishop(board, Color.BLACK));
+//		placeNewPiece('d', 8, new Queen(board, Color.BLACK));
 		placeNewPiece('e', 8, new King(board, Color.BLACK, this));
-		placeNewPiece('f', 8, new Bishop(board, Color.BLACK));
-		placeNewPiece('g', 8, new Knight(board, Color.BLACK));
-		placeNewPiece('h', 8, new Rook(board, Color.BLACK));
-		placeNewPiece('a', 7, new Pawn(board, Color.BLACK, this));
-		placeNewPiece('b', 7, new Pawn(board, Color.BLACK, this));
-		placeNewPiece('c', 7, new Pawn(board, Color.BLACK, this));
-		placeNewPiece('d', 7, new Pawn(board, Color.BLACK, this));
-		placeNewPiece('e', 7, new Pawn(board, Color.BLACK, this));
-		placeNewPiece('f', 7, new Pawn(board, Color.BLACK, this));
-		placeNewPiece('g', 7, new Pawn(board, Color.BLACK, this));
-		placeNewPiece('h', 7, new Pawn(board, Color.BLACK, this));
+//		placeNewPiece('f', 8, new Bishop(board, Color.BLACK));
+//		placeNewPiece('g', 8, new Knight(board, Color.BLACK));
+//		placeNewPiece('h', 8, new Rook(board, Color.BLACK));
+//		placeNewPiece('a', 7, new Pawn(board, Color.BLACK, this));
+//		placeNewPiece('b', 7, new Pawn(board, Color.BLACK, this));
+//		placeNewPiece('c', 7, new Pawn(board, Color.BLACK, this));
+//		placeNewPiece('d', 7, new Pawn(board, Color.BLACK, this));
+//		placeNewPiece('e', 7, new Pawn(board, Color.BLACK, this));
+//		placeNewPiece('f', 7, new Pawn(board, Color.BLACK, this));
+//		placeNewPiece('g', 7, new Pawn(board, Color.BLACK, this));
+//		placeNewPiece('h', 7, new Pawn(board, Color.BLACK, this));
+	}
+	
+	public ChessPiece replacePromotedPiece(String type) {
+		if(promoted == null) {
+			throw new IllegalStateException("Não há peça para ser promovida");
+		}
+		if(!type.equals("Q") && !type.equals("B") && !type.equals("N") && !type.equals("R")) {
+			throw new InvalidParameterException("Tipo invalido para promoção.");
+		}
+		
+		Position pos = promoted.getChessPosition().toPosition();
+		Piece p = board.removePiece(pos);
+		piecesOnTheBoard.remove(p);
+		
+		ChessPiece newPiece = newPiece(type, promoted.getColor());
+		board.placePiece(newPiece, pos);
+		piecesOnTheBoard.add(newPiece);
+		
+		return newPiece;
+	}
+	
+	private ChessPiece newPiece(String type, Color color) {
+		if(type.equals("B")) return new Bishop(board, color);
+		if(type.equals("N")) return new Knight(board, color);
+		if(type.equals("Q")) return new Queen(board, color);
+		return new Rook(board, color);
+		
 	}
 
 	public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
@@ -131,6 +164,15 @@ public class ChessMatch {
 		}
 
 		ChessPiece movedPiece = (ChessPiece) board.piece(target);
+		
+		promoted = null;
+		if(movedPiece instanceof Pawn) {
+			if((movedPiece.getColor() == Color.WHITE && target.getRow() == 0)
+					|| (movedPiece.getColor() == Color.BLACK && target.getRow() == 7)) {
+				promoted = (ChessPiece)board.piece(target);
+				promoted = replacePromotedPiece("Q");
+			}
+		}
 
 		check = testCheck(opponent(currentPlayer)) ? true : false;
 
